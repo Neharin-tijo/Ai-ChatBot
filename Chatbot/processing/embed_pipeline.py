@@ -3,6 +3,14 @@ Enhanced Universal Embedding Pipeline with Structure Preservation
 Handles tables, lists, notes, and maintains semantic relationships
 """
 
+
+import sys
+import io
+
+# Fix Windows console encoding
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 import os
 import sys
 import json
@@ -501,7 +509,7 @@ class UniversalEmbeddingPipeline:
                 stats['processed_pages'] += 1
                 new_chunks = len(all_documents) - stats['total_chunks']
                 stats['total_chunks'] = len(all_documents)
-                print(f"  ✅ {title[:50]}... → {new_chunks} chunks (T:{stats['tables_processed']} L:{stats['lists_processed']})")
+                print(f"   {title[:50]}... → {new_chunks} chunks (T:{stats['tables_processed']} L:{stats['lists_processed']})")
             else:
                 stats['skipped_pages'] += 1
 
@@ -554,11 +562,15 @@ class UniversalEmbeddingPipeline:
                 total_stats["total_chunks"] += len(docs)
                 print(f"  ✅ {original_name}: {len(docs)} chunks")
 
+<<<<<<< Updated upstream
         # ── Legacy single-PDF fallback ────────────────────────────────────────
         elif os.path.exists(os.path.join(self.client_dir, "custom_pdf.txt")):
             pdf_text_path = os.path.join(self.client_dir, "custom_pdf.txt")
             with open(pdf_text_path, 'r', encoding='utf-8') as f:
                 text = f.read()
+=======
+        print(f"   Generated {len(documents)} semantic chunks")
+>>>>>>> Stashed changes
 
             pdf_filename = "custom_pdf.pdf"
             print(f"  📄 Legacy PDF: {pdf_filename}")
@@ -632,7 +644,7 @@ class UniversalEmbeddingPipeline:
             'total_questions': len(documents)
         }
 
-        print(f"  ✅ Loaded {len(documents)} Q&A entries")
+        print(f"   Loaded {len(documents)} Q&A entries")
 
         return documents, stats
 
@@ -666,7 +678,7 @@ class UniversalEmbeddingPipeline:
     def store_in_chroma(self, embedded_docs: List[Dict[str, Any]], batch_size: int = 100):
         """Store embedded documents in ChromaDB with batching."""
         if not embedded_docs:
-            print("⚠️ No documents to store")
+            print("Warning:️ No documents to store")
             return
 
         print(f"\n📦 Storing {len(embedded_docs)} documents in ChromaDB...")
@@ -705,9 +717,9 @@ class UniversalEmbeddingPipeline:
                     metadatas=batch_metadatas,
                     embeddings=batch_embeddings
                 )
-                print(f"  ✅ Successfully stored batch")
+                print(f"   Successfully stored batch")
             except Exception as e:
-                print(f"  ❌ Error storing batch: {e}")
+                print(f"  X Error storing batch: {e}")
                 raise
 
         print(f"\n🎉 Successfully stored {total_docs} documents")
@@ -738,7 +750,7 @@ class UniversalEmbeddingPipeline:
     def run(self, source_type: str = 'crawl'):
         """Run complete pipeline."""
         print("\n" + "="*60)
-        print(f"🚀 Starting Enhanced Structure-Aware Embedding Pipeline")
+        print(f" Starting Enhanced Structure-Aware Embedding Pipeline")
         print(f"Client: {self.client_id}")
         print(f"Source: {source_type}")
         print("="*60)
@@ -752,7 +764,7 @@ class UniversalEmbeddingPipeline:
                 all_documents.extend(docs)
                 total_stats['website'] = stats
             except FileNotFoundError as e:
-                print(f"⚠️ {e}")
+                print(f"Warning:️ {e}")
 
         if source_type in ['pdf', 'both']:
             try:
@@ -760,17 +772,17 @@ class UniversalEmbeddingPipeline:
                 all_documents.extend(docs)
                 total_stats['pdf'] = stats
             except FileNotFoundError as e:
-                print(f"⚠️ {e}")
+                print(f"Warning:️ {e}")
 
         try:
             docs, stats = self.process_custom_qa()
             all_documents.extend(docs)
             total_stats['custom_qa'] = stats
         except Exception as e:
-            print(f"⚠️ Error processing Q&A: {e}")
+            print(f"Warning:️ Error processing Q&A: {e}")
 
         if not all_documents:
-            raise RuntimeError("❌ No documents to process! Check your input files.")
+            raise RuntimeError("X No documents to process! Check your input files.")
 
         print(f"\n📊 Total documents to embed: {len(all_documents)}")
 
@@ -779,7 +791,7 @@ class UniversalEmbeddingPipeline:
         self.save_artifacts(all_documents, embedded_docs)
 
         print("\n" + "="*60)
-        print("✅ PIPELINE COMPLETE")
+        print(" PIPELINE COMPLETE")
         print("="*60)
         print(f"📊 Processing Statistics:")
         for source, stats in total_stats.items():
@@ -823,7 +835,7 @@ def main():
         )
         pipeline.run(source_type=args.source)
     except Exception as e:
-        print(f"\n❌ Pipeline failed: {e}")
+        print(f"\nX Pipeline failed: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

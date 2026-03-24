@@ -3,6 +3,19 @@ Enhanced Universal Web Scraper with Structure Preservation
 Preserves tables, lists, notes, and contextual relationships
 """
 
+
+import sys
+import io
+
+# Fix Windows console encoding
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    
+    # Set environment for subprocesses
+    import os
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    os.environ['PYTHONUTF8'] = '1'
 import asyncio
 import json
 import os
@@ -150,7 +163,7 @@ class StructuredContentExtractor:
             main_content, strategy = cls._extract_main_content(soup)
 
             if not main_content:
-                print(f"⚠️  No main content found for {url}, using body fallback")
+                print(f"Warning:️  No main content found for {url}, using body fallback")
                 main_content = soup.find('body')
                 strategy = 'fallback_body'
 
@@ -190,23 +203,23 @@ class StructuredContentExtractor:
 
             # Quality checks
             if len(combined_content) < 100:
-                print(f"⚠️  Content too short ({len(combined_content)} chars) for {url}")
+                print(f"Warning:️  Content too short ({len(combined_content)} chars) for {url}")
                 return None
 
             # Reject archive/listing pages — they're just title lists with no real content
             read_more_count = combined_content.lower().count('read more')
             if read_more_count >= 3:
-                print(f"⚠️  Skipping archive/listing page (found {read_more_count} 'Read More' links): {url}")
+                print(f"Warning:️  Skipping archive/listing page (found {read_more_count} 'Read More' links): {url}")
                 return None
 
             # Reject person/staff profile pages — contact cards with no useful knowledge base content
             if cls._is_person_profile(combined_content):
-                print(f"⚠️  Skipping person profile page: {url}")
+                print(f"Warning:️  Skipping person profile page: {url}")
                 return None
 
             # Reject stale pages — last modified > 2 years ago with no recent content
             if cls._is_stale_page(soup, combined_content):
-                print(f"⚠️  Skipping stale page (outdated content): {url}")
+                print(f"Warning:️  Skipping stale page (outdated content): {url}")
                 return None
 
             # Detect content characteristics
@@ -242,7 +255,7 @@ class StructuredContentExtractor:
             }
 
         except Exception as e:
-            print(f"❌ Content extraction error for {url}: {e}")
+            print(f"X Content extraction error for {url}: {e}")
             traceback.print_exc()
             return None
 
@@ -295,7 +308,7 @@ class StructuredContentExtractor:
                 })
 
             except Exception as e:
-                print(f"⚠️  Table extraction error: {e}")
+                print(f"Warning:️  Table extraction error: {e}")
                 continue
 
         return tables_data
@@ -345,7 +358,7 @@ class StructuredContentExtractor:
             return '\n'.join(rows) if len(rows) > 2 else ''
 
         except Exception as e:
-            print(f"⚠️  Markdown conversion error: {e}")
+            print(f"Warning:️  Markdown conversion error: {e}")
             return ''
 
     @staticmethod
@@ -385,7 +398,7 @@ class StructuredContentExtractor:
                     })
 
             except Exception as e:
-                print(f"⚠️  List extraction error: {e}")
+                print(f"Warning:️  List extraction error: {e}")
                 continue
 
         return lists_data
@@ -617,7 +630,7 @@ class StructuredContentExtractor:
                 if best_element:
                     return best_element, strategy
             except Exception as e:
-                print(f"⚠️  Selector '{selector}' failed: {e}")
+                print(f"Warning:️  Selector '{selector}' failed: {e}")
                 continue
 
         body = soup.find('body')
@@ -857,7 +870,7 @@ class SmartLinkExtractor:
             return all_links[:30]
 
         except Exception as e:
-            print(f"⚠️  Link extraction error: {e}")
+            print(f"Warning:️  Link extraction error: {e}")
             return []
 
 
@@ -1027,7 +1040,7 @@ class UniversalWebScraper:
                 return 0
 
         except Exception as e:
-            print(f"\n❌ FATAL ERROR: {e}")
+            print(f"\nX FATAL ERROR: {e}")
             traceback.print_exc()
             self._save_results()
             return 1
@@ -1139,9 +1152,9 @@ class UniversalWebScraper:
                         });
                     }
                 """, timeout=8000)
-                print("   ✅ DOM stabilized")
+                print("    DOM stabilized")
             except:
-                print("   ⚠️  DOM stabilization timeout (continuing anyway)")
+                print("   Warning:️  DOM stabilization timeout (continuing anyway)")
 
             # Strategy 4: Specific waits for common patterns
             # Wait for counters/animated numbers to finish
@@ -1153,10 +1166,10 @@ class UniversalWebScraper:
             # Final safety buffer
             await page.wait_for_timeout(1000)
 
-            print("   ✅ Dynamic content loaded")
+            print("    Dynamic content loaded")
 
         except Exception as e:
-            print(f"   ⚠️  Dynamic content wait error: {e}")
+            print(f"   Warning:️  Dynamic content wait error: {e}")
             # Fallback: just wait a reasonable amount
             await page.wait_for_timeout(3000)
 
@@ -1223,10 +1236,10 @@ class UniversalWebScraper:
                 }
             """, timeout=8000)
 
-            print("      ✅ Counters complete")
+            print("       Counters complete")
 
         except Exception as e:
-            print(f"      ⚠️  Counter wait timeout: {e}")
+            print(f"      Warning:️  Counter wait timeout: {e}")
 
 
     async def _wait_for_images(self, page: Page):
@@ -1435,7 +1448,7 @@ class UniversalWebScraper:
             return dynamic_data
 
         except Exception as e:
-            print(f"   ⚠️  Dynamic value extraction failed: {e}")
+            print(f"   Warning:️  Dynamic value extraction failed: {e}")
             return {}
 
 
@@ -1445,7 +1458,7 @@ class UniversalWebScraper:
         try:
             page = await context.new_page()
 
-            print(f"🌐 Loading: {url}")
+            print(f"Web: Loading: {url}")
             await page.goto(url, wait_until='networkidle', timeout=60000)
 
             # Progressive loading strategy
@@ -1470,7 +1483,7 @@ class UniversalWebScraper:
                             print(f"      • {counter['label']}: {counter['value']}")
 
                     if dynamic_data.get('data_attributes'):
-                        print(f"   📊 Found {len(dynamic_data['data_attributes'])} elements with data attributes")
+                        print(f"   Stats: Found {len(dynamic_data['data_attributes'])} elements with data attributes")
 
                 quality_score = content_data['metadata']['quality_score']
 
@@ -1484,8 +1497,8 @@ class UniversalWebScraper:
                     self.stats['total_lists'] += content_data['metadata']['num_lists']
                     self.stats['total_notes'] += content_data['metadata']['num_notes']
 
-                    print(f"✅ [{len(self.results)}/{self.max_pages}] {url}")
-                    print(f"   📝 {content_data['metadata']['word_count']} words | "
+                    print(f" [{len(self.results)}/{self.max_pages}] {url}")
+                    print(f"   Note: {content_data['metadata']['word_count']} words | "
                           f"Quality: {quality_score:.2f} | "
                           f"{content_data['metadata']['content_type']} | "
                           f"Tables: {content_data['metadata']['num_tables']} | "
@@ -1497,10 +1510,10 @@ class UniversalWebScraper:
                             self.queue.append(link)
                 else:
                     self.stats['low_quality'] += 1
-                    print(f"⚠️  Low quality (score: {quality_score:.2f}): {url}")
+                    print(f"Warning:️  Low quality (score: {quality_score:.2f}): {url}")
             else:
                 self.stats['low_quality'] += 1
-                print(f"⚠️  No content extracted: {url}")
+                print(f"Warning:️  No content extracted: {url}")
 
         except PlaywrightTimeoutError:
             self.stats['errors'] += 1
@@ -1510,7 +1523,7 @@ class UniversalWebScraper:
         except Exception as e:
             self.stats['errors'] += 1
             error_msg = f"{url}: {str(e)[:100]}"
-            print(f"❌ {error_msg}")
+            print(f"X {error_msg}")
             self.stats['error_details'].append(error_msg)
             traceback.print_exc()
         finally:
@@ -1526,7 +1539,7 @@ class UniversalWebScraper:
     #     try:
     #         page = await context.new_page()
 
-    #         print(f"🌐 Loading: {url}")
+    #         print(f"Web: Loading: {url}")
     #         await page.goto(url, wait_until='networkidle', timeout=60000)
     #         await self._scroll_page(page)
     #         await self._wait_for_dynamic_content(page)
@@ -1547,8 +1560,8 @@ class UniversalWebScraper:
     #                 self.stats['total_lists'] += content_data['metadata']['num_lists']
     #                 self.stats['total_notes'] += content_data['metadata']['num_notes']
 
-    #                 print(f"✅ [{len(self.results)}/{self.max_pages}] {url}")
-    #                 print(f"   📝 {content_data['metadata']['word_count']} words | "
+    #                 print(f" [{len(self.results)}/{self.max_pages}] {url}")
+    #                 print(f"   Note: {content_data['metadata']['word_count']} words | "
     #                       f"Quality: {quality_score:.2f} | "
     #                       f"{content_data['metadata']['content_type']} | "
     #                       f"Tables: {content_data['metadata']['num_tables']} | "
@@ -1560,10 +1573,10 @@ class UniversalWebScraper:
     #                         self.queue.append(link)
     #             else:
     #                 self.stats['low_quality'] += 1
-    #                 print(f"⚠️  Low quality (score: {quality_score:.2f}): {url}")
+    #                 print(f"Warning:️  Low quality (score: {quality_score:.2f}): {url}")
     #         else:
     #             self.stats['low_quality'] += 1
-    #             print(f"⚠️  No content extracted: {url}")
+    #             print(f"Warning:️  No content extracted: {url}")
 
     #     except PlaywrightTimeoutError:
     #         self.stats['errors'] += 1
@@ -1573,7 +1586,7 @@ class UniversalWebScraper:
     #     except Exception as e:
     #         self.stats['errors'] += 1
     #         error_msg = f"{url}: {str(e)[:100]}"
-    #         print(f"❌ {error_msg}")
+    #         print(f"X {error_msg}")
     #         self.stats['error_details'].append(error_msg)
     #         traceback.print_exc()
     #     finally:
@@ -1586,7 +1599,7 @@ class UniversalWebScraper:
     def _print_header(self):
         """Print scraper header."""
         print("\n" + "="*70)
-        print("🚀 Enhanced Structure-Preserving Web Scraper")
+        print(" Enhanced Structure-Preserving Web Scraper")
         print("="*70 + "\n")
 
     def _save_results(self):
@@ -1627,21 +1640,21 @@ class UniversalWebScraper:
 
         # Print summary
         print("\n" + "="*70)
-        print("🎉 SCRAPING COMPLETE" if self.stats['successful'] > 0 else "⚠️  SCRAPING FINISHED WITH ISSUES")
+        print(" SCRAPING COMPLETE" if self.stats['successful'] > 0 else "Warning:️  SCRAPING FINISHED WITH ISSUES")
         print("="*70)
-        print(f"✅ Successfully scraped: {self.stats['successful']} pages")
-        print(f"📊 Average quality score: {self.stats['avg_quality']:.2f}")
-        print(f"📋 Total tables extracted: {self.stats['total_tables']}")
-        print(f"📝 Total lists extracted: {self.stats['total_lists']}")
-        print(f"⚠️  Total notes extracted: {self.stats['total_notes']}")
-        print(f"⚠️  Low quality/no content: {self.stats['low_quality']} pages")
-        print(f"❌ Errors: {self.stats['errors']} pages")
-        print(f"📈 Total attempted: {self.stats['total_attempted']} pages")
-        print(f"💾 Saved to: {self.output_file}")
-        print(f"📋 Stats saved to: {stats_file}")
+        print(f" Successfully scraped: {self.stats['successful']} pages")
+        print(f"Stats: Average quality score: {self.stats['avg_quality']:.2f}")
+        print(f"Clip: Total tables extracted: {self.stats['total_tables']}")
+        print(f"Note: Total lists extracted: {self.stats['total_lists']}")
+        print(f"Warning:️  Total notes extracted: {self.stats['total_notes']}")
+        print(f"Warning:️  Low quality/no content: {self.stats['low_quality']} pages")
+        print(f"X Errors: {self.stats['errors']} pages")
+        print(f"Stats: Total attempted: {self.stats['total_attempted']} pages")
+        print(f"Save: Saved to: {self.output_file}")
+        print(f"Clip: Stats saved to: {stats_file}")
 
         if self.stats['error_details']:
-            print(f"\n📝 Error details ({len(self.stats['error_details'])} errors):")
+            print(f"\nNote: Error details ({len(self.stats['error_details'])} errors):")
             for i, error in enumerate(self.stats['error_details'][:5], 1):
                 print(f"   {i}. {error}")
             if len(self.stats['error_details']) > 5:
@@ -1682,7 +1695,7 @@ class UniversalWebScraper:
 
                 f.write("\n---\n\n")
 
-        print(f"📄 Readable summary saved to: {summary_file}")
+        print(f"Doc: Readable summary saved to: {summary_file}")
 
 
 async def main():
@@ -1711,9 +1724,9 @@ if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n⚠️  Scraping interrupted by user")
+        print("\nWarning:️  Scraping interrupted by user")
         exit(1)
     except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
+        print(f"\nX Fatal error: {e}")
         traceback.print_exc()
         exit(1)
